@@ -1,0 +1,60 @@
+body {
+    background-color: rgb(161, 161, 161);
+    overflow: hidden;
+}
+
+.btn {
+    width: 50%;
+    margin: 20px 0;
+}
+.App {
+    margin: 25px 15px !important;
+    .App-container {
+        overflow: hidden;
+    background-color: #698661;
+    height: 70vh;
+    }
+  
+  &-cover {
+      transition: .5s all;
+      background-color: #000;
+      opacity: .8;
+      position: absolute;
+      top:0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      z-index: 50;
+      display: none;
+      .loading-text {
+          color: #fff;
+          text-align: center;
+        
+          margin-top: 10vh;
+      }
+  }
+}
+
+.icon-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  img {
+    width: 28vw;
+    height: auto;
+    max-width: 200px;
+  }
+}
+
+.footer-container {
+    display: flex;
+}
+
+.nes-container {
+    padding: 0 !important;
+}
+
+.map-container {
+    height: 70vh;
+}

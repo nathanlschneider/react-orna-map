@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "fetch-readablestream": "^0.2.0",
+    "nes.css": "^2.2.0",
+    "node-sass": "^4.12.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-map-gl": "^5.0.3",
     "react-scripts": "3.0.1"
   },
   "scripts": {
