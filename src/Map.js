@@ -1,6 +1,16 @@
 import React, { Component } from "react";
 import ReactMapGL, { Marker } from "react-map-gl";
-
+import Alchemist from "./img/alchemist.png";
+import Arcanist from "./img/arcanist.png";
+import Bestiary from "./img/bestiary.png";
+import Blacksmith from "./img/blacksmith.png";
+import Demonologist from "./img/demonologist.png";
+import Dungeon from "./img/dungeon.png";
+import Inn from "./img/inn.png";
+import Keep from "./img/keep.png";
+import Outpost from "./img/outpost.png";
+import Shop from "./img/shop.png";
+let icon;
 export default class Map extends Component {
   constructor(props) {
     super(props);
@@ -33,13 +43,24 @@ export default class Map extends Component {
           }
         >
           {this.props.markerData.map(point => {
+            icon = point.properties.type;                      
             return (
               <Marker
                 latitude={point.geometry.coordinates[0]}
                 longitude={point.geometry.coordinates[1]}
               >
-                <img src={this.props.icon} width={50} alt="" />
-                <div>{point.properties.type}</div>
+                <img src= {
+                  icon === 'Shop' ? Shop : 
+                  icon === 'Alchemist' ? Alchemist :
+                  icon === 'Arcanist' ? Arcanist :
+                  icon === 'Blacksmith' ? Blacksmith :
+                  icon === 'Demonologist' ? Demonologist :
+                  icon === 'Dungeon' ? Dungeon :
+                  icon === 'Bestiary' ? Bestiary :
+                  icon === 'Inn' ? Inn :
+                  icon === 'Keep' ? Keep : Outpost
+              } width={50} alt="" />
+                {/* <div>{point.properties.type}</div> */}
               </Marker>
             );
           })}

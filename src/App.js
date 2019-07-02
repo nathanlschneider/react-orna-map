@@ -94,7 +94,6 @@ export default class App extends Component {
           lat={this.state.latitude}
           long={this.state.longitude}
           markerData={this.state.markerData}
-          icon={Shop}
         />
       );
     }
