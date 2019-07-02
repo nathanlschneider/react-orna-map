@@ -51,8 +51,8 @@ export default class App extends Component {
   setCurrentLocation(e) {
     navigator.geolocation.getCurrentPosition((data, err) => {
       this.setState({
-        latitude: data.coords.latitude,
-        longitude: data.coords.longitude
+        latitude: parseFloat(data.coords.latitude) + parseFloat(Math.random() * .00013),
+        longitude: parseFloat(data.coords.longitude) + parseFloat(Math.random() * .00013)
       });
     });
   }

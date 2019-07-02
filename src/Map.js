@@ -11,6 +11,7 @@ import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
 let icon;
+
 export default class Map extends Component {
   constructor(props) {
     super(props);
@@ -43,7 +44,7 @@ export default class Map extends Component {
           }
         >
           {this.props.markerData.map(point => {
-            icon = point.properties.type;                      
+            icon = point.properties.type;      
             return (
               <Marker
                 latitude={point.geometry.coordinates[0]}
@@ -60,7 +61,6 @@ export default class Map extends Component {
                   icon === 'Inn' ? Inn :
                   icon === 'Keep' ? Keep : Outpost
               } width={50} alt="" />
-                {/* <div>{point.properties.type}</div> */}
               </Marker>
             );
           })}
