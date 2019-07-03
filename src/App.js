@@ -37,6 +37,7 @@ export default class App extends Component {
     this.setState({ showIcons: true, showMap: false });
   }
   slideDown(e) {
+    this.getMapPoints();
     this.setState({ showIcons: false, showMap: true });
   }
 
@@ -51,12 +52,13 @@ export default class App extends Component {
   setCurrentLocation(e) {
     navigator.geolocation.getCurrentPosition((data, err) => {
       this.setState({
-        latitude: parseFloat(data.coords.latitude) + parseFloat(Math.random() * .00013),
-        longitude: parseFloat(data.coords.longitude) + parseFloat(Math.random() * .00013)
+        latitude: data.coords.latitude,
+        longitude: data.coords.longitude
       });
     });
   }
   handleClick(e) {
+    this.setState({ loading: true });
     // e.target.alt
 
     fetch("https://nschneider.info/dbw", {
@@ -72,9 +74,21 @@ export default class App extends Component {
         },
         geometry: {
           type: "Point",
-          coordinates: [this.state.latitude, this.state.longitude]
+          coordinates: [
+            parseFloat(this.state.latitude) +
+              parseFloat(
+                (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
+              ),
+            parseFloat(this.state.longitude) +
+              parseFloat(
+                (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
+              )
+          ]
         }
       })
+    }).then(res =>{
+      setTimeout(()=>{ this.setState({loading: false}) }, 1000);
+      
     });
   }
   componentDidMount() {
@@ -82,7 +96,7 @@ export default class App extends Component {
     this.setCurrentLocation();
   }
   render() {
-    console.log("App.js render", ++x)
+    console.log("App.js render", ++x);
     let mapLogic;
     if (
       this.state.markerData !== null &&
@@ -94,6 +108,7 @@ export default class App extends Component {
           lat={this.state.latitude}
           long={this.state.longitude}
           markerData={this.state.markerData}
+          icon={Shop}
         />
       );
     }

@@ -10,7 +10,7 @@ import Inn from "./img/inn.png";
 import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
-let icon;
+
 
 export default class Map extends Component {
   constructor(props) {
@@ -25,14 +25,18 @@ export default class Map extends Component {
         zoom: 16
       }
     };
+
   }
 
   componentDidMount() {
     // this.setState({latitude: this.props.latitude, longitude: this.props.longitude, data: this.props.markerData});
   }
 
+  updatePoint(id, coords){
+    console.log(id, coords);
+  }
+
   render() {
-      
     if (this.props.markerData !== undefined && this.props.markerData !== null) {
       return (
         <ReactMapGL
@@ -47,8 +51,12 @@ export default class Map extends Component {
             icon = point.properties.type;      
             return (
               <Marker
+              
+                draggable={true}
+                onDragEnd={event => this.updatePoint(event.srcEvent.path[1].id, event.lngLat)}
                 latitude={point.geometry.coordinates[0]}
                 longitude={point.geometry.coordinates[1]}
+                id={`${point._id}`}
               >
                 <img src= {
                   icon === 'Shop' ? Shop : 
@@ -60,10 +68,11 @@ export default class Map extends Component {
                   icon === 'Bestiary' ? Bestiary :
                   icon === 'Inn' ? Inn :
                   icon === 'Keep' ? Keep : Outpost
-              } width={50} alt="" />
+              } width={ this.state.viewport['zoom'] * 5 } alt="" />
               </Marker>
             );
           })}
+
         </ReactMapGL>
       );
     }
