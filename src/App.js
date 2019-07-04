@@ -12,7 +12,7 @@ import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
 //import Marker from "./img/marker.png";
 import Map from "./Map";
-let x = 0;
+
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -31,6 +31,7 @@ export default class App extends Component {
     this.slideUp = this.slideUp.bind(this);
     this.slideDown = this.slideDown.bind(this);
     this.centerClick = this.centerClick.bind(this);
+    this.getMapPoints = this.getMapPoints.bind(this);
   }
 
   slideUp(e) {
@@ -67,25 +68,18 @@ export default class App extends Component {
         Accept: "application/json, text/plain, */*",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        type: "Feature",
-        properties: {
-          type: e.target.alt
-        },
-        geometry: {
-          type: "Point",
-          coordinates: [
-            parseFloat(this.state.latitude) +
+      body: JSON.stringify({type: e.target.alt, coordinates: [
+            parseFloat(this.state.longitude) +
               parseFloat(
                 (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
               ),
-            parseFloat(this.state.longitude) +
+            parseFloat(this.state.latitude) +
               parseFloat(
                 (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
               )
           ]
         }
-      })
+      )
     }).then(res =>{
       setTimeout(()=>{ this.setState({loading: false}) }, 1000);
       
@@ -96,7 +90,6 @@ export default class App extends Component {
     this.setCurrentLocation();
   }
   render() {
-    console.log("App.js render", ++x);
     let mapLogic;
     if (
       this.state.markerData !== null &&
@@ -105,10 +98,10 @@ export default class App extends Component {
     ) {
       mapLogic = (
         <Map
-          lat={this.state.latitude}
           long={this.state.longitude}
+          lat={this.state.latitude}
           markerData={this.state.markerData}
-          icon={Shop}
+          refresh={this.getMapPoints}
         />
       );
     }

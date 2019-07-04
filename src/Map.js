@@ -10,7 +10,8 @@ import Inn from "./img/inn.png";
 import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
-
+let icon;
+let list =[];
 
 export default class Map extends Component {
   constructor(props) {
@@ -23,17 +24,25 @@ export default class Map extends Component {
         longitude: this.props.long,
         data: null,
         zoom: 16
-      }
+      },
+      list: []
     };
-
   }
 
   componentDidMount() {
     // this.setState({latitude: this.props.latitude, longitude: this.props.longitude, data: this.props.markerData});
   }
 
-  updatePoint(id, coords){
-    console.log(id, coords);
+  updatePoint(id, coords, index) {
+    fetch("https://nschneider.info/dbu", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: id, coordinates: coords })
+    }).then(this.props.refresh())
+      .catch(console.error) 
   }
 
   render() {
@@ -47,34 +56,59 @@ export default class Map extends Component {
             "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
           }
         >
-          {this.props.markerData.map(point => {
-            icon = point.properties.type;      
+           {this.props.markerData.slice().map((point, index) => {
+             list.push([index, point.coordinates])
+           })}
+          {this.props.markerData.map((point, index) => {
+             
+
+            icon = point.type;
             return (
               <Marker
-              
+                key={index}
                 draggable={true}
-                onDragEnd={event => this.updatePoint(event.srcEvent.path[1].id, event.lngLat)}
-                latitude={point.geometry.coordinates[0]}
-                longitude={point.geometry.coordinates[1]}
-                id={`${point._id}`}
+                onDragEnd={event => {
+                  list[index][1] = event.lngLat;
+                  this.setState({...this.state})
+                   this.updatePoint(`${point._id}`, event.lngLat, index);
+
+                }
+                }
+                longitude={list[index][1][0]}
+                latitude={list[index][1][1]}
               >
-                <img src= {
-                  icon === 'Shop' ? Shop : 
-                  icon === 'Alchemist' ? Alchemist :
-                  icon === 'Arcanist' ? Arcanist :
-                  icon === 'Blacksmith' ? Blacksmith :
-                  icon === 'Demonologist' ? Demonologist :
-                  icon === 'Dungeon' ? Dungeon :
-                  icon === 'Bestiary' ? Bestiary :
-                  icon === 'Inn' ? Inn :
-                  icon === 'Keep' ? Keep : Outpost
-              } width={ this.state.viewport['zoom'] * 5 } alt="" />
+                <img
+                  src={
+                    icon === "Shop"
+                      ? Shop
+                      : icon === "Alchemist"
+                      ? Alchemist
+                      : icon === "Arcanist"
+                      ? Arcanist
+                      : icon === "Blacksmith"
+                      ? Blacksmith
+                      : icon === "Demonologist"
+                      ? Demonologist
+                      : icon === "Dungeon"
+                      ? Dungeon
+                      : icon === "Bestiary"
+                      ? Bestiary
+                      : icon === "Inn"
+                      ? Inn
+                      : icon === "Keep"
+                      ? Keep
+                      : Outpost
+                  }
+                  width={this.state.viewport["zoom"] * 5}
+                  alt=""
+                />
               </Marker>
             );
           })}
-
         </ReactMapGL>
       );
     }
+    this.setState({list: list})
+
   }
 }
