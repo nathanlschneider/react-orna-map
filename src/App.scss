@@ -1,5 +1,5 @@
 body {
-  background-color: rgb(161, 161, 161);
+  background-color: #a1a1a1;
   overflow: hidden;
 }
 
@@ -72,6 +72,7 @@ body {
   left: -10vw;
   transition: .3s all;
   width: 90vw;
+  white-space: nowrap;
   
 &-checkbox {
   margin: 5px 0 0 20vw;
@@ -80,4 +81,9 @@ body {
   &-btn {
     transition: .6s all;
   }
+}
+
+.mapIcon {
+  max-width: 200px !important;
+  transition: background-color .3s, opacity .3s;
 }
