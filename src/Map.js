@@ -11,7 +11,7 @@ import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
 let icon;
-let list =[];
+let list = [];
 
 export default class Map extends Component {
   constructor(props) {
@@ -25,12 +25,23 @@ export default class Map extends Component {
         data: null,
         zoom: 16
       },
+      canEdit: false,
+      menuIsOpen: false,
       list: []
     };
+
+    this._handleSlideMenu = this._handleSlideMenu.bind(this);
   }
 
+  _handleSlideMenu = () => this.setState({menuIsOpen: !this.state.menuIsOpen});
+  _handleChange = (e) => this.setState({ canEdit: e.target.checked, menuIsOpen: !this.state.menuIsOpen});
+
   componentDidMount() {
-    // this.setState({latitude: this.props.latitude, longitude: this.props.longitude, data: this.props.markerData});
+    this.setState({
+      latitude: this.props.latitude,
+      longitude: this.props.longitude,
+      data: this.props.markerData
+    });
   }
 
   updatePoint(id, coords, index) {
@@ -41,8 +52,9 @@ export default class Map extends Component {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ id: id, coordinates: coords })
-    }).then(this.props.refresh())
-      .catch(console.error) 
+    })
+      .then(this.props.refresh())
+      .catch(console.error);
   }
 
   render() {
@@ -56,24 +68,20 @@ export default class Map extends Component {
             "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
           }
         >
-           {this.props.markerData.slice().map((point, index) => {
-             list.push([index, point.coordinates])
-           })}
+          {this.props.markerData.slice().map((point, index) => {
+            list.push([index, point.coordinates]);
+          })}
           {this.props.markerData.map((point, index) => {
-             
-
             icon = point.type;
             return (
               <Marker
                 key={index}
-                draggable={true}
+                draggable={this.state.canEdit}
                 onDragEnd={event => {
                   list[index][1] = event.lngLat;
-                  this.setState({...this.state})
-                   this.updatePoint(`${point._id}`, event.lngLat, index);
-
-                }
-                }
+                  this.setState({ ...this.state });
+                  this.updatePoint(`${point._id}`, event.lngLat, index);
+                }}
                 longitude={list[index][1][0]}
                 latitude={list[index][1][1]}
               >
@@ -100,15 +108,36 @@ export default class Map extends Component {
                       : Outpost
                   }
                   width={this.state.viewport["zoom"] * 5}
+                  style={
+                    this.state.canEdit
+                      ? {
+                          opacity: 0.5,
+                          backgroundColor: "red",
+                          borderRadius: "5px"
+                        }
+                      : {}
+                  }
                   alt=""
                 />
               </Marker>
             );
           })}
+
+          <div
+            
+            className="slideMenu nes-container is-rounded"
+            style={this.state.menuIsOpen ? {transform: 'translateX(0)'}:{transform: 'translateX(-75vw)'}}
+          >
+            <label>
+              <input type="checkbox" className="slideMenu-checkbox nes-checkbox" onChange={this._handleChange}/>
+              <span>Edit Mode</span>
+            </label>
+            <div className="slideMenu-btn" onClick={this._handleSlideMenu} style={this.state.menuIsOpen ? {transform: 'rotate(180deg)' }:{transform: 'rotate(0deg)'}}>></div>
+           
+          </div>
         </ReactMapGL>
       );
     }
-    this.setState({list: list})
-
+    this.setState({ list: list });
   }
 }

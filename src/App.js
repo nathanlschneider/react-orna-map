@@ -1,16 +1,17 @@
 import React, { Component } from "react";
 import "./App.scss";
-import Alchemist from "./img/alchemist.png";
-import Arcanist from "./img/arcanist.png";
-import Bestiary from "./img/bestiary.png";
-import Blacksmith from "./img/blacksmith.png";
-import Demonologist from "./img/demonologist.png";
-import Dungeon from "./img/dungeon.png";
-import Inn from "./img/inn.png";
-import Keep from "./img/keep.png";
-import Outpost from "./img/outpost.png";
-import Shop from "./img/shop.png";
-//import Marker from "./img/marker.png";
+import {
+  Alchemist,
+  Arcanist,
+  Bestiary,
+  Blacksmith,
+  Demonologist,
+  Dungeon,
+  Inn,
+  Keep,
+  Outpost,
+  Shop
+} from "./Icons";
 import Map from "./Map";
 
 export default class App extends Component {
@@ -52,6 +53,7 @@ export default class App extends Component {
 
   setCurrentLocation(e) {
     navigator.geolocation.getCurrentPosition((data, err) => {
+      console.log(data);
       this.setState({
         latitude: data.coords.latitude,
         longitude: data.coords.longitude
@@ -68,21 +70,19 @@ export default class App extends Component {
         Accept: "application/json, text/plain, */*",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({type: e.target.alt, coordinates: [
-            parseFloat(this.state.longitude) +
-              parseFloat(
-                (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
-              ),
-            parseFloat(this.state.latitude) +
-              parseFloat(
-                (Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)
-              )
-          ]
-        }
-      )
-    }).then(res =>{
-      setTimeout(()=>{ this.setState({loading: false}) }, 1000);
-      
+      body: JSON.stringify({
+        type: e.target.alt,
+        coordinates: [
+          parseFloat(this.state.longitude) +
+            parseFloat((Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)),
+          parseFloat(this.state.latitude) +
+            parseFloat((Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5))
+        ]
+      })
+    }).then(res => {
+      setTimeout(() => {
+        this.setState({ loading: false });
+      }, 1000);
     });
   }
   componentDidMount() {
