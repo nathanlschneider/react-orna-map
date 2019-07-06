@@ -12,7 +12,7 @@ body {
   .App-container {
     overflow: hidden;
     background-color: #698661;
-    
+
     height: 80vh;
   }
 
@@ -48,7 +48,6 @@ body {
   }
 }
 
-
 .footer-container {
   display: flex;
 }
@@ -59,7 +58,6 @@ body {
 
 .map-container {
   height: 90vh;
-  
 }
 
 .slideMenu {
@@ -70,20 +68,56 @@ body {
   position: relative;
   top: 20px;
   left: -10vw;
-  transition: .3s all;
+  transition: 0.3s all;
   width: 90vw;
   white-space: nowrap;
-  
-&-checkbox {
-  margin: 5px 0 0 20vw;
-}
+
+  &-checkbox {
+    margin: 5px 0 0 20vw;
+  }
 
   &-btn {
-    transition: .6s all;
+    transition: 0.6s all;
   }
 }
 
 .mapIcon {
   max-width: 200px !important;
-  transition: background-color .3s, opacity .3s;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+
+.control-container {
+  position: absolute;
+  top: 5px;
+  right: 50px;
+  width: 55px;
+  height: 185px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  opacity: 0.8;
+  background-color: #a1a1a1;
+  .center-btn {
+    background-image: url("./img/locate.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+  }
+  .edit-btn {
+    background-image: url("./img/edit.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+  }
+
+  .reload-btn {
+    background-image: url("./img/reload.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 40px;
+    height: 40px;
+  }
 }

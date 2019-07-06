@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import ReactMapGL, { Marker } from "react-map-gl";
+import ReactMapGL, { Marker, FlyToInterpolator } from "react-map-gl";
 import Alchemist from "./img/alchemist.png";
 import Arcanist from "./img/arcanist.png";
 import Bestiary from "./img/bestiary.png";
@@ -10,6 +10,9 @@ import Inn from "./img/inn.png";
 import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
+import Edit from "./img/edit.svg";
+import Exit from "./img/exit.svg";
+
 let icon;
 let list = [];
 
@@ -20,25 +23,32 @@ export default class Map extends Component {
       viewport: {
         width: "100%",
         height: "100%",
-        latitude: this.props.lat,
-        longitude: this.props.long,
+        latitude: this.props.latitude,
+        longitude: this.props.longitude,
         data: null,
         zoom: 16
       },
       canEdit: false,
-      menuIsOpen: false,
       list: []
     };
 
-    this._handleSlideMenu = this._handleSlideMenu.bind(this);
   }
+  _goToViewport = () => {
+    this._onViewportChange({
+      longitude: this.props.longitude,
+      latitude: this.props.latitude,
+      zoom: 16,
+      transitionInterpolator: new FlyToInterpolator(),
+      transitionDuration: 1000
+    });
+  };
 
-  _handleSlideMenu = () =>
-    this.setState({ menuIsOpen: !this.state.menuIsOpen });
+  _reload = () => window.location.reload();
+
+
   _handleChange = e =>
     this.setState({
-      canEdit: e.target.checked,
-      menuIsOpen: !this.state.menuIsOpen
+      canEdit: !this.state.canEdit
     });
 
   _onViewportChange(viewport) {
@@ -83,8 +93,6 @@ export default class Map extends Component {
   render() {
     const size = 10;
     const { zoom } = this.state.viewport;
-
-    console.log(zoom);
 
     if (this.props.markerData !== undefined && this.props.markerData !== null) {
       return (
@@ -172,34 +180,20 @@ export default class Map extends Component {
               </Marker>
             );
           })}
-
+<div className="control-container nes-container is-rounded">
+          <div className="center-btn" onClick={this._goToViewport} />
           <div
-            className="slideMenu nes-container is-rounded"
+            className="edit-btn"
             style={
-              this.state.menuIsOpen
-                ? { transform: "translateX(0)" }
-                : { transform: "translateX(-75vw)" }
+              this.state.canEdit
+                ? { backgroundImage: `url(${Exit})` }
+                : { backgroundImage: `url(${Edit})` }
             }
-          >
-            <label>
-              <input
-                type="checkbox"
-                className="slideMenu-checkbox nes-checkbox"
-                onChange={this._handleChange}
-              />
-              <span>Edit Mode</span>
-            </label>
-            <div
-              className="slideMenu-btn"
-              onClick={this._handleSlideMenu}
-              style={
-                this.state.menuIsOpen
-                  ? { transform: "rotate(180deg)" }
-                  : { transform: "rotate(0deg)" }
-              }
-            >
-              >
-            </div>
+            onClick={this._handleChange}
+          />
+          <div className="reload-btn" onClick={this._reload} />
+
+
           </div>
         </ReactMapGL>
       );

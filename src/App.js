@@ -73,10 +73,7 @@ export default class App extends Component {
       body: JSON.stringify({
         type: e.target.alt,
         coordinates: [
-          parseFloat(this.state.longitude) +
-            parseFloat((Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5)),
-          parseFloat(this.state.latitude) +
-            parseFloat((Math.random() * (0.0006 - 0.0002) + 0.0002).toFixed(5))
+          this.state.longitude, this.state.latitude
         ]
       })
     }).then(res => {
@@ -98,8 +95,8 @@ export default class App extends Component {
     ) {
       mapLogic = (
         <Map
-          long={this.state.longitude}
-          lat={this.state.latitude}
+          longitude={this.state.longitude}
+          latitude={this.state.latitude}
           markerData={this.state.markerData}
           refresh={this.getMapPoints}
         />
