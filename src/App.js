@@ -45,12 +45,12 @@ export default class App extends Component {
 
   showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
-  showMap = () => this.setState({ showIcons: false, showMap: true });
-
+  showMap = () => {this.setState({ showIcons: false, showMap: true }); this.getMarkerData()};
+   
   getMarkerData = () => {
     fetch("https://nschneider.info/dbr", { method: "GET" })
       .then(res => res.json())
-      .then(json => this.setState({ markerData: json }));
+      .then(json => this.setState({ markerData: json }))
   };
 
   setCurrentLocation = () => {
@@ -78,9 +78,10 @@ export default class App extends Component {
           this.state.viewport.latitude
         ]
       })
-    }).then(res => {
+    }).then(() => {
       setTimeout(() => {
         this.setState({ loading: false });
+        this.showMap();
       }, 1000);
     });
   };
@@ -131,6 +132,7 @@ export default class App extends Component {
       .catch(console.error);
   }
 
+
   componentDidMount() {
     fetch("https://nschneider.info/dbr", { method: "GET" })
       .then(res => res.json())
@@ -139,17 +141,12 @@ export default class App extends Component {
         this.setCurrentLocation();
         window.addEventListener("resize", this._resize);
         this._resize();
-        this.setState({
-          latitude: this.state.latitude,
-          longitude: this.state.longitude,
-          data: this.state.markerData
-        });
       });
   }
 
   render() {
     if (!this.state.viewport.longitude) return null;
-
+    console.log("render");
     const size = 10;
     const { zoom } = this.state.viewport;
 
@@ -205,19 +202,17 @@ export default class App extends Component {
                 "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
               }
             >
-              {this.state.markerData.slice().map((point, index) => {
-                list.push([index, point.coordinates]);
-                return null;
-              })}
               {this.state.markerData.map((point, index) => {
+                list.push([index, point.coordinates]);
                 icon = point.type;
+                console.log(index);
                 return (
                   <Marker
                     key={index}
                     draggable={this.state.canEdit}
                     onDragEnd={event => {
                       list[index][1] = event.lngLat;
-                      this.setState({ ...this.state });
+                      this.setState({ ...this.state, list: list });
                       this.updatePoint(`${point._id}`, event.lngLat, index);
                     }}
                     longitude={list[index][1][0]}
