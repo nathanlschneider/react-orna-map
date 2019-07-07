@@ -15,7 +15,6 @@ import Exit from "./img/exit.svg";
 import "./App.scss";
 
 let icon;
-let list = [];
 
 export default class App extends Component {
   constructor(props) {
@@ -45,7 +44,8 @@ export default class App extends Component {
 
   showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
-  showMap = () => {this.setState({ showIcons: false, showMap: true }); this.getMarkerData()};
+  showMap = () => {this.setState({ showIcons: false, showMap: true }); this.getMarkerData()
+};
    
   getMarkerData = () => {
     fetch("https://nschneider.info/dbr", { method: "GET" })
@@ -64,6 +64,8 @@ export default class App extends Component {
   };
 
   writeMarkerData = e => {
+    console.log(this.state.viewport.longitude, this.state.currentLongitude);
+
     this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
       method: "post",
@@ -146,10 +148,10 @@ export default class App extends Component {
 
   render() {
     if (!this.state.viewport.longitude) return null;
-    console.log("render");
     const size = 10;
     const { zoom } = this.state.viewport;
-
+    let list = [];
+    
     return (
       <div className="App">
         <div className="App-container nes-container is-rounded">
@@ -205,7 +207,7 @@ export default class App extends Component {
               {this.state.markerData.map((point, index) => {
                 list.push([index, point.coordinates]);
                 icon = point.type;
-                console.log(index);
+                console.log(list)
                 return (
                   <Marker
                     key={index}
