@@ -37,7 +37,8 @@ export default class App extends Component {
         data: null,
         zoom: 16
       },
-      canEdit: false,
+      canMove: false,
+      canDelete: false,
       list: []
     };
   }
@@ -64,7 +65,6 @@ export default class App extends Component {
   };
 
   writeMarkerData = e => {
-    console.log(this.state.viewport.longitude, this.state.currentLongitude);
 
     this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
@@ -100,10 +100,12 @@ export default class App extends Component {
 
   _reload = () => window.location.reload();
 
-  _handleChange = e =>
+  _handleCanMove = () =>
     this.setState({
-      canEdit: !this.state.canEdit
+      canEdit: !this.state.canMove
     });
+
+    _handleCanDelete = () =>  this.setState({ canDelete: !this.state.canDelete})
 
   _onViewportChange(viewport) {
     this.setState({
@@ -134,6 +136,19 @@ export default class App extends Component {
       .catch(console.error);
   }
 
+_handleDeleteMarker = (e) => {
+ console.log(e.target.alt);
+  fetch("https://nschneider.info/dbd", {
+    method: "post",
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id: e.target.alt})
+  })
+    .then(()=> this.getMarkerData())
+    .catch(console.error);
+}
 
   componentDidMount() {
     fetch("https://nschneider.info/dbr", { method: "GET" })
@@ -203,11 +218,14 @@ export default class App extends Component {
               mapboxApiAccessToken={
                 "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
               }
+
             >
               {this.state.markerData.map((point, index) => {
                 list.push([index, point.coordinates]);
+                
                 icon = point.type;
-                console.log(list)
+    
+                // console.log(list)
                 return (
                   <Marker
                     key={index}
@@ -222,6 +240,7 @@ export default class App extends Component {
                   >
                     <img
                       className="mapIcon"
+                      onClick={this.state.canDelete ? this._handleDeleteMarker : null}
                       src={
                         icon === "Shop"
                           ? Shop
@@ -265,7 +284,7 @@ export default class App extends Component {
                           : zoom * 11
                       }
                       style={
-                        this.state.canEdit
+                        this.state.canDelete
                           ? {
                               opacity: 0.5,
                               backgroundColor: "red",
@@ -278,7 +297,7 @@ export default class App extends Component {
                                 1.8}px,${-size}px)`
                             }
                       }
-                      alt=""
+                      alt={`${point._id}`}
                     />
                   </Marker>
                 );
@@ -288,12 +307,13 @@ export default class App extends Component {
                 <div
                   className="edit-btn"
                   style={
-                    this.state.canEdit
+                    this.state.canMove
                       ? { backgroundImage: `url(${Exit})` }
                       : { backgroundImage: `url(${Edit})` }
                   }
-                  onClick={this._handleChange}
+                  onClick={this._handleCanMove}
                 />
+                <div className="delete-btn" onClick={this._handleCanDelete}/>
                 <div className="reload-btn" onClick={this._reload} />
               </div>
             </ReactMapGL>
