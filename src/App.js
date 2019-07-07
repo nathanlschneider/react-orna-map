@@ -1,18 +1,21 @@
 import React, { Component } from "react";
+import ReactMapGL, { Marker, FlyToInterpolator } from "react-map-gl";
+import Alchemist from "./img/alchemist.png";
+import Arcanist from "./img/arcanist.png";
+import Bestiary from "./img/bestiary.png";
+import Blacksmith from "./img/blacksmith.png";
+import Demonologist from "./img/demonologist.png";
+import Dungeon from "./img/dungeon.png";
+import Inn from "./img/inn.png";
+import Keep from "./img/keep.png";
+import Outpost from "./img/outpost.png";
+import Shop from "./img/shop.png";
+import Edit from "./img/edit.svg";
+import Exit from "./img/exit.svg";
 import "./App.scss";
-import {
-  Alchemist,
-  Arcanist,
-  Bestiary,
-  Blacksmith,
-  Demonologist,
-  Dungeon,
-  Inn,
-  Keep,
-  Outpost,
-  Shop
-} from "./Icons";
-import Map from "./Map";
+
+let icon;
+let list = [];
 
 export default class App extends Component {
   constructor(props) {
@@ -23,47 +26,45 @@ export default class App extends Component {
       showIcons: false,
       showMap: true,
       error: null,
-      latitude: null,
-      longitude: null,
+      currentLatitude: null,
+      currentLongitude: null,
       selectedIcon: null,
-      markerData: null
+      markerData: null,
+      viewport: {
+        width: null,
+        height: null,
+        latitude: 0,
+        longitude: 0,
+        data: null,
+        zoom: 16
+      },
+      canEdit: false,
+      list: []
     };
-    this.handleClick = this.handleClick.bind(this);
-    this.slideUp = this.slideUp.bind(this);
-    this.slideDown = this.slideDown.bind(this);
-    this.centerClick = this.centerClick.bind(this);
-    this.getMapPoints = this.getMapPoints.bind(this);
   }
 
-  slideUp(e) {
-    this.setState({ showIcons: true, showMap: false });
-  }
-  slideDown(e) {
-    this.getMapPoints();
-    this.setState({ showIcons: false, showMap: true });
-  }
+  showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
-  centerClick(e) {}
+  showMap = () => this.setState({ showIcons: false, showMap: true });
 
-  getMapPoints() {
+  getMarkerData = () => {
     fetch("https://nschneider.info/dbr", { method: "GET" })
       .then(res => res.json())
       .then(json => this.setState({ markerData: json }));
-  }
+  };
 
-  setCurrentLocation(e) {
+  setCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition((data, err) => {
-      console.log(data);
       this.setState({
-        latitude: data.coords.latitude,
-        longitude: data.coords.longitude
+        currentLatitude: data.coords.latitude,
+        currentLongitude: data.coords.longitude
       });
+      this._goToViewport();
     });
-  }
-  handleClick(e) {
-    this.setState({ loading: true });
-    // e.target.alt
+  };
 
+  writeMarkerData = e => {
+    this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
       method: "post",
       headers: {
@@ -73,7 +74,8 @@ export default class App extends Component {
       body: JSON.stringify({
         type: e.target.alt,
         coordinates: [
-          this.state.longitude, this.state.latitude
+          this.state.viewport.longitude,
+          this.state.viewport.latitude
         ]
       })
     }).then(res => {
@@ -81,27 +83,75 @@ export default class App extends Component {
         this.setState({ loading: false });
       }, 1000);
     });
+  };
+
+  _goToViewport = () => {
+    this._onViewportChange({
+      longitude: this.state.currentLongitude,
+      latitude: this.state.currentLatitude,
+      zoom: 16,
+      transitionInterpolator: new FlyToInterpolator(),
+      transitionDuration: 1000
+    });
+  };
+
+  _reload = () => window.location.reload();
+
+  _handleChange = e =>
+    this.setState({
+      canEdit: !this.state.canEdit
+    });
+
+  _onViewportChange(viewport) {
+    this.setState({
+      viewport: { ...this.state.viewport, ...viewport }
+    });
   }
+  _resize = () => {
+    this._onViewportChange({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+  };
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this._resize);
+  }
+
+  updatePoint(id, coords, index) {
+    fetch("https://nschneider.info/dbu", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: id, coordinates: coords })
+    })
+      // .then(this.state.refresh())
+      .catch(console.error);
+  }
+
   componentDidMount() {
-    this.getMapPoints();
-    this.setCurrentLocation();
+    fetch("https://nschneider.info/dbr", { method: "GET" })
+      .then(res => res.json())
+      .then(json => {
+        this.setState({ markerData: json });
+        this.setCurrentLocation();
+        window.addEventListener("resize", this._resize);
+        this._resize();
+        this.setState({
+          latitude: this.state.latitude,
+          longitude: this.state.longitude,
+          data: this.state.markerData
+        });
+      });
   }
+
   render() {
-    let mapLogic;
-    if (
-      this.state.markerData !== null &&
-      this.state.longitude !== null &&
-      this.state.latitude !== null
-    ) {
-      mapLogic = (
-        <Map
-          longitude={this.state.longitude}
-          latitude={this.state.latitude}
-          markerData={this.state.markerData}
-          refresh={this.getMapPoints}
-        />
-      );
-    }
+    if (!this.state.viewport.longitude) return null;
+
+    const size = 10;
+    const { zoom } = this.state.viewport;
 
     return (
       <div className="App">
@@ -120,40 +170,150 @@ export default class App extends Component {
             className="icon-container"
             style={{ display: this.state.showIcons ? "block" : "none" }}
           >
-            <img src={Alchemist} alt="Alchemist" onClick={this.handleClick} />
-            <img src={Arcanist} alt="Arcanist" onClick={this.handleClick} />
-            <img src={Bestiary} alt="Bestiary" onClick={this.handleClick} />
-            <img src={Blacksmith} alt="Blacksmith" onClick={this.handleClick} />
+            <img
+              src={Alchemist}
+              alt="Alchemist"
+              onClick={this.writeMarkerData}
+            />
+            <img src={Arcanist} alt="Arcanist" onClick={this.writeMarkerData} />
+            <img src={Bestiary} alt="Bestiary" onClick={this.writeMarkerData} />
+            <img
+              src={Blacksmith}
+              alt="Blacksmith"
+              onClick={this.writeMarkerData}
+            />
             <img
               src={Demonologist}
               alt="Demonologist"
-              onClick={this.handleClick}
+              onClick={this.writeMarkerData}
             />
-            <img src={Dungeon} alt="Dungeon" onClick={this.handleClick} />
-            <img src={Inn} alt="Inn" onClick={this.handleClick} />
-            <img src={Keep} alt="Keep" onClick={this.handleClick} />
-            <img src={Outpost} alt="Outpost" onClick={this.handleClick} />
-            <img src={Shop} alt="Shop" onClick={this.handleClick} />
+            <img src={Dungeon} alt="Dungeon" onClick={this.writeMarkerData} />
+            <img src={Inn} alt="Inn" onClick={this.writeMarkerData} />
+            <img src={Keep} alt="Keep" onClick={this.writeMarkerData} />
+            <img src={Outpost} alt="Outpost" onClick={this.writeMarkerData} />
+            <img src={Shop} alt="Shop" onClick={this.writeMarkerData} />
           </div>
           <div
             className="map-container"
             style={{ display: this.state.showMap ? "block" : "none" }}
           >
-            {mapLogic}
+            <ReactMapGL
+              {...this.state.viewport}
+              mapStyle={"mapbox://styles/nlschneider/cjx3jkcbk14ho1crw854isk20"}
+              onViewportChange={viewport => this.setState({ viewport })}
+              mapboxApiAccessToken={
+                "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
+              }
+            >
+              {this.state.markerData.slice().map((point, index) => {
+                list.push([index, point.coordinates]);
+                return null;
+              })}
+              {this.state.markerData.map((point, index) => {
+                icon = point.type;
+                return (
+                  <Marker
+                    key={index}
+                    draggable={this.state.canEdit}
+                    onDragEnd={event => {
+                      list[index][1] = event.lngLat;
+                      this.setState({ ...this.state });
+                      this.updatePoint(`${point._id}`, event.lngLat, index);
+                    }}
+                    longitude={list[index][1][0]}
+                    latitude={list[index][1][1]}
+                  >
+                    <img
+                      className="mapIcon"
+                      src={
+                        icon === "Shop"
+                          ? Shop
+                          : icon === "Alchemist"
+                          ? Alchemist
+                          : icon === "Arcanist"
+                          ? Arcanist
+                          : icon === "Blacksmith"
+                          ? Blacksmith
+                          : icon === "Demonologist"
+                          ? Demonologist
+                          : icon === "Dungeon"
+                          ? Dungeon
+                          : icon === "Bestiary"
+                          ? Bestiary
+                          : icon === "Inn"
+                          ? Inn
+                          : icon === "Keep"
+                          ? Keep
+                          : Outpost
+                      }
+                      width={
+                        zoom <= 15
+                          ? zoom * 2
+                          : zoom <= 15.5
+                          ? zoom * 3
+                          : zoom <= 16
+                          ? zoom * 4
+                          : zoom <= 16.5
+                          ? zoom * 5
+                          : zoom <= 17
+                          ? zoom * 6
+                          : zoom <= 17.5
+                          ? zoom * 7
+                          : zoom <= 18
+                          ? zoom * 8
+                          : zoom <= 18.5
+                          ? zoom * 9
+                          : zoom <= 19
+                          ? zoom * 10
+                          : zoom * 11
+                      }
+                      style={
+                        this.state.canEdit
+                          ? {
+                              opacity: 0.5,
+                              backgroundColor: "red",
+                              borderRadius: "5px",
+                              transform: `translate(${-size /
+                                1.8}px,${-size}px)`
+                            }
+                          : {
+                              transform: `translate(${-size /
+                                1.8}px,${-size}px)`
+                            }
+                      }
+                      alt=""
+                    />
+                  </Marker>
+                );
+              })}
+              <div className="control-container nes-container is-rounded">
+                <div className="center-btn" onClick={this._goToViewport} />
+                <div
+                  className="edit-btn"
+                  style={
+                    this.state.canEdit
+                      ? { backgroundImage: `url(${Exit})` }
+                      : { backgroundImage: `url(${Edit})` }
+                  }
+                  onClick={this._handleChange}
+                />
+                <div className="reload-btn" onClick={this._reload} />
+              </div>
+            </ReactMapGL>
           </div>
         </div>
         <footer>
           <div className="footer-container">
             <button
               type="button"
-              onClick={this.slideUp}
+              onClick={this.showMarkers}
               className="btn nes-btn is-primary"
             >
               Markers
             </button>
             <button
               type="button"
-              onClick={this.slideDown}
+              onClick={this.showMap}
               className="btn nes-btn is-primary"
             >
               Map
