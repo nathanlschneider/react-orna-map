@@ -91,7 +91,7 @@ export default class Map extends Component {
   }
 
   render() {
-    const size = 10;
+    const size = 11;
     const { zoom } = this.state.viewport;
 
     if (this.props.markerData !== undefined && this.props.markerData !== null) {
