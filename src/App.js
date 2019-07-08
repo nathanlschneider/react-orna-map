@@ -17,7 +17,7 @@ import Delete from "./Controls";
 import "./App.scss";
 let list = [];
 let icon;
-
+let dragCords = [];
 
 export default class App extends Component {
   constructor(props) {
@@ -49,17 +49,13 @@ export default class App extends Component {
   showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
   showMap = () => {
+    console.log('show map')
     this.setState({ showIcons: false, showMap: true });
-    this.getMarkerData();
+    this.readMarkerData();
   };
-
-  getMarkerData = () => {
-    fetch("https://nschneider.info/dbr", { method: "GET" })
-      .then(res => res.json())
-      .then(json => this.setState({ markerData: json }));
-  };
-
+ 
   setCurrentLocation = () => {
+    console.log('set location')
     navigator.geolocation.getCurrentPosition((data, err) => {
       this.setState({
         currentLatitude: data.coords.latitude,
@@ -69,7 +65,15 @@ export default class App extends Component {
     });
   };
 
+ readMarkerData = () => {
+    console.log('get marker data')
+    fetch("https://nschneider.info/dbr", { method: "GET" })
+      .then(res => res.json())
+      .then(json => this.setState({ markerData: json }));
+  };
+
   writeMarkerData = e => {
+    console.log('write marker data')
     this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
       method: "post",
@@ -84,13 +88,44 @@ export default class App extends Component {
           this.state.viewport.latitude
         ]
       })
-    }).then(() => {
-      setTimeout(() => {
-        this.setState({ loading: false });
-        this.showMap();
-      }, 1000);
-    });
+    })
+      .then(() => {
+        setTimeout(() => {
+          this.setState({ loading: false });
+          this.showMap()
+        }, 1000);
+      })     
   };
+
+ updateMarkerData(id, coords, index) {
+    console.log('update marker')
+    fetch("https://nschneider.info/dbu", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: id, coordinates: coords })
+    })
+      //.then(this.getMarkerData())
+      .catch(console.error);
+  }
+
+  deleteMarkerData = e => {
+    fetch("https://nschneider.info/dbd", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: e.target.alt })
+    })
+      .then(() => this._handleCanDelete())
+      .then(() => this.readMarkerData())
+      .catch(console.error);
+  };
+
+
 
   _goToViewport = () => {
     this._onViewportChange({
@@ -116,6 +151,7 @@ export default class App extends Component {
       viewport: { ...this.state.viewport, ...viewport }
     });
   }
+
   _resize = () => {
     this._onViewportChange({
       width: window.innerWidth,
@@ -126,33 +162,6 @@ export default class App extends Component {
   componentWillUnmount() {
     window.removeEventListener("resize", this._resize);
   }
-
-  updatePoint(id, coords, index) {
-    fetch("https://nschneider.info/dbu", {
-      method: "post",
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ id: id, coordinates: coords })
-    })
-      //.then(this.getMarkerData())
-      .catch(console.error);
-  }
-
-  _handleDeleteMarker = e => {
-    fetch("https://nschneider.info/dbd", {
-      method: "post",
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ id: e.target.alt })
-    })
-      .then(() => this._handleCanDelete())
-      .then(() => this.getMarkerData())
-      .catch(console.error);
-  };
 
   componentDidMount() {
     fetch("https://nschneider.info/dbr", { method: "GET" })
@@ -166,11 +175,10 @@ export default class App extends Component {
   }
 
   render() {
-    console.log('R')
+    console.log("R");
     if (!this.state.viewport.longitude) return null;
     const size = 10;
     const { zoom } = this.state.viewport;
-    
 
     return (
       <div className="App">
@@ -224,8 +232,9 @@ export default class App extends Component {
                 "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
               }
             >
+
               {this.state.markerData.map((point, index) => {
-                list.push([index, point.coordinates]);
+               
                 icon = point.type;
 
                 return (
@@ -233,13 +242,17 @@ export default class App extends Component {
                     key={index}
                     draggable={this.state.canMove}
                     onDragEnd={event => {
-                      list[index][1] = event.lngLat;
-                      
-                      this.setState({ ...this.state });
-                      this.updatePoint(`${point._id}`, event.lngLat, index);
+                      dragCords = [index, event.lngLat];
+                      console.log('index:' + index, dragCords);
+                      this._onViewportChange()
+                      this.updateMarkerData(
+                        `${point._id}`,
+                        event.lngLat,
+                        index
+                      );
                     }}
-                    longitude={ list[index][1][0]}
-                    latitude={ list[index][1][1]}
+                    longitude={index === dragCords[0] ? dragCords[1][0] : point.coordinates[0]}
+                    latitude={index === dragCords[0] ? dragCords[1][1] : point.coordinates[1]}
                   >
                     <div
                       className="move-indicator"
@@ -255,7 +268,8 @@ export default class App extends Component {
                           position: "absolute",
                           bottom: 0,
                           opacity: 0.5,
-                          transform: `translate(${-size / 1.8}px,${-size}px)`
+                          transform: `translate(${-size /
+                            1.8}px,${-size}px)`
                         }}
                         alt=""
                       />
@@ -263,7 +277,9 @@ export default class App extends Component {
                     <img
                       className="mapIcon"
                       onClick={
-                        this.state.canDelete ? this._handleDeleteMarker : null
+                        this.state.canDelete
+                          ? this.deleteMarkerData
+                          : null
                       }
                       src={
                         icon === "Shop"
@@ -309,16 +325,23 @@ export default class App extends Component {
                       }
                       style={{
                         pointerEvents:
-                          this.state.canDelete || this.state.canMove
+                          this.state.canDelete ||
+                          this.state.canMove
                             ? "auto"
                             : "none",
                         opacity: this.state.canDelete ? 0.5 : 1,
-                        backgroundColor: this.state.canDelete ? "red" : null,
-                        borderRadius: this.state.canDelete ? "5px" : null,
-                        transform: `translate(${-size / 1.8}px,${-size}px)`
+                        backgroundColor: this.state.canDelete
+                          ? "red"
+                          : null,
+                        borderRadius: this.state.canDelete
+                          ? "5px"
+                          : null,
+                        transform: `translate(${-size /
+                          1.8}px,${-size}px)`
                       }}
                       alt={`${point._id}`}
                     />
+                  
                   </Marker>
                 );
               })}
