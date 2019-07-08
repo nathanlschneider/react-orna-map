@@ -12,7 +12,9 @@ import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
 import Edit from "./img/edit.svg";
 import Exit from "./img/exit.svg";
+import Mover from "./img/mover.svg";
 import "./App.scss";
+let list = [];
 
 let icon;
 
@@ -45,13 +47,15 @@ export default class App extends Component {
 
   showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
-  showMap = () => {this.setState({ showIcons: false, showMap: true }); this.getMarkerData()
-};
-   
+  showMap = () => {
+    this.setState({ showIcons: false, showMap: true });
+    this.getMarkerData();
+  };
+
   getMarkerData = () => {
     fetch("https://nschneider.info/dbr", { method: "GET" })
       .then(res => res.json())
-      .then(json => this.setState({ markerData: json }))
+      .then(json => this.setState({ markerData: json }));
   };
 
   setCurrentLocation = () => {
@@ -65,7 +69,6 @@ export default class App extends Component {
   };
 
   writeMarkerData = e => {
-
     this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
       method: "post",
@@ -102,10 +105,10 @@ export default class App extends Component {
 
   _handleCanMove = () =>
     this.setState({
-      canEdit: !this.state.canMove
+      canMove: !this.state.canMove
     });
 
-    _handleCanDelete = () =>  this.setState({ canDelete: !this.state.canDelete})
+  _handleCanDelete = () => this.setState({ canDelete: !this.state.canDelete });
 
   _onViewportChange(viewport) {
     this.setState({
@@ -132,23 +135,25 @@ export default class App extends Component {
       },
       body: JSON.stringify({ id: id, coordinates: coords })
     })
-      // .then(this.state.refresh())
+      //.then(this.getMarkerData())
       .catch(console.error);
   }
 
-_handleDeleteMarker = (e) => {
- console.log(e.target.alt);
-  fetch("https://nschneider.info/dbd", {
-    method: "post",
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ id: e.target.alt})
-  })
-    .then(()=> this.getMarkerData())
-    .catch(console.error);
-}
+  _handleDeleteMarker = e => {
+    console.log(e.target.alt);
+    fetch("https://nschneider.info/dbd", {
+      method: "post",
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: e.target.alt })
+    })
+      .then(() => this._handleCanDelete())
+      .then(() => (list = []))
+      .then(() => this.getMarkerData())
+      .catch(console.error);
+  };
 
   componentDidMount() {
     fetch("https://nschneider.info/dbr", { method: "GET" })
@@ -165,8 +170,7 @@ _handleDeleteMarker = (e) => {
     if (!this.state.viewport.longitude) return null;
     const size = 10;
     const { zoom } = this.state.viewport;
-    let list = [];
-    
+
     return (
       <div className="App">
         <div className="App-container nes-container is-rounded">
@@ -218,18 +222,17 @@ _handleDeleteMarker = (e) => {
               mapboxApiAccessToken={
                 "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
               }
-
             >
               {this.state.markerData.map((point, index) => {
                 list.push([index, point.coordinates]);
-                
+
                 icon = point.type;
-    
+
                 // console.log(list)
                 return (
                   <Marker
                     key={index}
-                    draggable={this.state.canEdit}
+                    draggable={this.state.canMove}
                     onDragEnd={event => {
                       list[index][1] = event.lngLat;
                       this.setState({ ...this.state, list: list });
@@ -238,9 +241,30 @@ _handleDeleteMarker = (e) => {
                     longitude={list[index][1][0]}
                     latitude={list[index][1][1]}
                   >
+                    <div
+                      className="move-indicator"
+                      style={
+                        this.state.canMove
+                          ? { display: "block" }
+                          : { display: "none" }
+                      }
+                    >
+                      <img
+                        src={Mover}
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          opacity: 0.5,
+                          transform: `translate(${-size / 1.8}px,${-size}px)`
+                        }}
+                        alt=""
+                      />
+                    </div>
                     <img
                       className="mapIcon"
-                      onClick={this.state.canDelete ? this._handleDeleteMarker : null}
+                      onClick={
+                        this.state.canDelete ? this._handleDeleteMarker : null
+                      }
                       src={
                         icon === "Shop"
                           ? Shop
@@ -284,15 +308,11 @@ _handleDeleteMarker = (e) => {
                           : zoom * 11
                       }
                       style={
-                        this.state.canDelete
-                          ? {
-                              opacity: 0.5,
-                              backgroundColor: "red",
-                              borderRadius: "5px",
-                              transform: `translate(${-size /
-                                1.8}px,${-size}px)`
-                            }
-                          : {
+                           {
+                              pointerEvents: this.state.canDelete || this.state.canMove ? 'auto' : 'none',
+                              opacity: this.state.canDelete ? 0.5 : 1,
+                              backgroundColor: this.state.canDelete ? "red" : null,
+                              borderRadius: this.state.canDelete ? "5px" : null,
                               transform: `translate(${-size /
                                 1.8}px,${-size}px)`
                             }
@@ -313,7 +333,7 @@ _handleDeleteMarker = (e) => {
                   }
                   onClick={this._handleCanMove}
                 />
-                <div className="delete-btn" onClick={this._handleCanDelete}/>
+                <div className="delete-btn" onClick={this._handleCanDelete} />
                 <div className="reload-btn" onClick={this._reload} />
               </div>
             </ReactMapGL>

@@ -51,10 +51,8 @@ client.connect(function(err) {
   const db = client.db(dbName);
 
   app.post("/dbw", function(req, res) {
-    res.send("Ok");
     db.collection("featureCollection").insertOne(req.body, function(
-      err,
-      result
+      err,result
     ) {
       if (err) {
         console.log(err);
@@ -94,8 +92,9 @@ client.connect(function(err) {
       function(err, result) {
         if (err) {
           console.log(err);
+          //res.sendStatus(500);
+
         } else {
-          console.log(result);
           res.sendStatus(200);
         }
       }

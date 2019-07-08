@@ -2,7 +2,9 @@ body {
   background-color: #a1a1a1;
   overflow: hidden;
 }
-
+.mapboxgl-marker {
+  pointer-events: none;
+}
 .btn {
   width: 50%;
   margin: 20px 0;
