@@ -100,28 +100,29 @@ body {
   align-items: center;
   opacity: 0.8;
   background-color: #a1a1a1;
-  .center-btn {
-    background-image: url("./img/locate.svg");
-    background-size: contain;
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
-  }
-  .edit-btn {
-    background-image: url("./img/edit.svg");
-    background-size: contain;
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
-  }
-.delete-btn {
-transition: all .3s;
-    background-size: contain;
-    background-repeat: no-repeat;
-    width: 40px;
-    height: 40px;
+  transition: all 0.3s ease-in-out;
 
-}
+  &-btn {
+    position: absolute;
+    top: 300px;
+    right: 60px;
+    border-left: 22px solid transparent;
+    border-right: 22px solid transparent;
+    border-top: 22px solid #a1a1a1;
+    transition: all 0.3s ease-in-out;
+  }
+  .locate-btn {
+    transition: all 0.3s;
+    &:hover {
+      fill: #fff;
+    }
+  }
+  .move-btn {
+    transition: all 0.3s;
+  }
+  .delete-btn {
+    transition: all 0.3s;
+  }
   .reload-btn {
     background-image: url("./img/reload.png");
     background-size: contain;

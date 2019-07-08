@@ -10,14 +10,13 @@ import Inn from "./img/inn.png";
 import Keep from "./img/keep.png";
 import Outpost from "./img/outpost.png";
 import Shop from "./img/shop.png";
-import Edit from "./img/edit.svg";
-import Exit from "./img/exit.svg";
 import Mover from "./img/mover.svg";
-import Delete from "./Controls";
+import { Delete, Move, Locate } from "./Controls";
 import "./App.scss";
-let list = [];
+
 let icon;
 let dragCords = [];
+let preDrag = [];
 
 export default class App extends Component {
   constructor(props) {
@@ -42,6 +41,7 @@ export default class App extends Component {
       },
       canMove: false,
       canDelete: false,
+      controlContainerIsOpen: false,
       list: []
     };
   }
@@ -49,13 +49,13 @@ export default class App extends Component {
   showMarkers = () => this.setState({ showIcons: true, showMap: false });
 
   showMap = () => {
-    console.log('show map')
+    console.log("show map");
     this.setState({ showIcons: false, showMap: true });
     this.readMarkerData();
   };
- 
+
   setCurrentLocation = () => {
-    console.log('set location')
+    console.log("set location");
     navigator.geolocation.getCurrentPosition((data, err) => {
       this.setState({
         currentLatitude: data.coords.latitude,
@@ -65,15 +65,15 @@ export default class App extends Component {
     });
   };
 
- readMarkerData = () => {
-    console.log('get marker data')
+  readMarkerData = () => {
+    console.log("get marker data");
     fetch("https://nschneider.info/dbr", { method: "GET" })
       .then(res => res.json())
       .then(json => this.setState({ markerData: json }));
   };
 
   writeMarkerData = e => {
-    console.log('write marker data')
+    console.log("write marker data");
     this.setState({ loading: true });
     fetch("https://nschneider.info/dbw", {
       method: "post",
@@ -88,17 +88,16 @@ export default class App extends Component {
           this.state.viewport.latitude
         ]
       })
-    })
-      .then(() => {
-        setTimeout(() => {
-          this.setState({ loading: false });
-          this.showMap()
-        }, 1000);
-      })     
+    }).then(() => {
+      setTimeout(() => {
+        this.setState({ loading: false });
+        this.showMap();
+      }, 1000);
+    });
   };
 
- updateMarkerData(id, coords, index) {
-    console.log('update marker')
+  updateMarkerData(id, coords, index) {
+    console.log("update marker");
     fetch("https://nschneider.info/dbu", {
       method: "post",
       headers: {
@@ -125,8 +124,6 @@ export default class App extends Component {
       .catch(console.error);
   };
 
-
-
   _goToViewport = () => {
     this._onViewportChange({
       longitude: this.state.currentLongitude,
@@ -145,6 +142,11 @@ export default class App extends Component {
     });
 
   _handleCanDelete = () => this.setState({ canDelete: !this.state.canDelete });
+
+  _handleControlContainer = () =>
+    this.setState({
+      controlContainerIsOpen: !this.state.controlContainerIsOpen
+    });
 
   _onViewportChange(viewport) {
     this.setState({
@@ -175,7 +177,6 @@ export default class App extends Component {
   }
 
   render() {
-    console.log("R");
     if (!this.state.viewport.longitude) return null;
     const size = 10;
     const { zoom } = this.state.viewport;
@@ -232,9 +233,13 @@ export default class App extends Component {
                 "pk.eyJ1IjoibmxzY2huZWlkZXIiLCJhIjoiY2p4M2ppdzB4MDFqdzQ5bzhqazZ3MXRnNiJ9.7a0pJA4K4f-2oLLH2HR5lg"
               }
             >
-
               {this.state.markerData.map((point, index) => {
-               
+                if (dragCords[index] === undefined) {
+                  preDrag[index] = point.coordinates;
+                } else {
+                  preDrag[index] = dragCords[index];
+                }
+
                 icon = point.type;
 
                 return (
@@ -242,17 +247,16 @@ export default class App extends Component {
                     key={index}
                     draggable={this.state.canMove}
                     onDragEnd={event => {
-                      dragCords = [index, event.lngLat];
-                      console.log('index:' + index, dragCords);
-                      this._onViewportChange()
+                      dragCords[index] = event.lngLat;
+                      this._onViewportChange();
                       this.updateMarkerData(
                         `${point._id}`,
                         event.lngLat,
                         index
                       );
                     }}
-                    longitude={index === dragCords[0] ? dragCords[1][0] : point.coordinates[0]}
-                    latitude={index === dragCords[0] ? dragCords[1][1] : point.coordinates[1]}
+                    longitude={preDrag[index][0]}
+                    latitude={preDrag[index][1]}
                   >
                     <div
                       className="move-indicator"
@@ -268,8 +272,7 @@ export default class App extends Component {
                           position: "absolute",
                           bottom: 0,
                           opacity: 0.5,
-                          transform: `translate(${-size /
-                            1.8}px,${-size}px)`
+                          transform: `translate(${-size / 1.8}px,${-size}px)`
                         }}
                         alt=""
                       />
@@ -277,9 +280,7 @@ export default class App extends Component {
                     <img
                       className="mapIcon"
                       onClick={
-                        this.state.canDelete
-                          ? this.deleteMarkerData
-                          : null
+                        this.state.canDelete ? this.deleteMarkerData : null
                       }
                       src={
                         icon === "Shop"
@@ -325,36 +326,33 @@ export default class App extends Component {
                       }
                       style={{
                         pointerEvents:
-                          this.state.canDelete ||
-                          this.state.canMove
+                          this.state.canDelete || this.state.canMove
                             ? "auto"
                             : "none",
                         opacity: this.state.canDelete ? 0.5 : 1,
-                        backgroundColor: this.state.canDelete
-                          ? "red"
-                          : null,
-                        borderRadius: this.state.canDelete
-                          ? "5px"
-                          : null,
-                        transform: `translate(${-size /
-                          1.8}px,${-size}px)`
+                        backgroundColor: this.state.canDelete ? "red" : null,
+                        borderRadius: this.state.canDelete ? "5px" : null,
+                        transform: `translate(${-size / 1.8}px,${-size}px)`
                       }}
                       alt={`${point._id}`}
                     />
-                  
                   </Marker>
                 );
               })}
 
-              <div className="control-container nes-container is-rounded">
-                <div className="center-btn" onClick={this._goToViewport} />
-                <div
-                  className="edit-btn"
-                  style={
-                    this.state.canMove
-                      ? { backgroundImage: `url(${Exit})` }
-                      : { backgroundImage: `url(${Edit})` }
-                  }
+              <div
+                className="control-container nes-container is-rounded"
+                style={
+                  this.state.controlContainerIsOpen
+                    ? { transform: "translateY(0px)" }
+                    : { transform: "translateY(-290px)" }
+                }
+              >
+                <Locate className="locate-btn" onClick={this._goToViewport} />
+
+                <Move
+                  fill={this.state.canMove ? "#fff" : "#000"}
+                  className="move-btn"
                   onClick={this._handleCanMove}
                 />
                 <Delete
@@ -364,6 +362,15 @@ export default class App extends Component {
                 />
                 <div className="reload-btn" onClick={this._reload} />
               </div>
+              <div
+                style={
+                  this.state.controlContainerIsOpen
+                    ? { transform: "translateY(0px)" }
+                    : { transform: "translateY(-290px)" }
+                }
+                className="control-container-btn"
+                onClick={this._handleControlContainer}
+              />
             </ReactMapGL>
           </div>
         </div>
