@@ -115,7 +115,7 @@ body {
     height: 40px;
   }
 .delete-btn {
-  background-image: url("./img/delete.svg");
+transition: all .3s;
     background-size: contain;
     background-repeat: no-repeat;
     width: 40px;

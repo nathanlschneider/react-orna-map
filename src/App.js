@@ -13,10 +13,11 @@ import Shop from "./img/shop.png";
 import Edit from "./img/edit.svg";
 import Exit from "./img/exit.svg";
 import Mover from "./img/mover.svg";
+import Delete from "./Controls";
 import "./App.scss";
 let list = [];
-
 let icon;
+
 
 export default class App extends Component {
   constructor(props) {
@@ -140,7 +141,6 @@ export default class App extends Component {
   }
 
   _handleDeleteMarker = e => {
-    console.log(e.target.alt);
     fetch("https://nschneider.info/dbd", {
       method: "post",
       headers: {
@@ -150,7 +150,6 @@ export default class App extends Component {
       body: JSON.stringify({ id: e.target.alt })
     })
       .then(() => this._handleCanDelete())
-      .then(() => (list = []))
       .then(() => this.getMarkerData())
       .catch(console.error);
   };
@@ -167,9 +166,11 @@ export default class App extends Component {
   }
 
   render() {
+    console.log('R')
     if (!this.state.viewport.longitude) return null;
     const size = 10;
     const { zoom } = this.state.viewport;
+    
 
     return (
       <div className="App">
@@ -225,21 +226,20 @@ export default class App extends Component {
             >
               {this.state.markerData.map((point, index) => {
                 list.push([index, point.coordinates]);
-
                 icon = point.type;
 
-                // console.log(list)
                 return (
                   <Marker
                     key={index}
                     draggable={this.state.canMove}
                     onDragEnd={event => {
                       list[index][1] = event.lngLat;
-                      this.setState({ ...this.state, list: list });
+                      
+                      this.setState({ ...this.state });
                       this.updatePoint(`${point._id}`, event.lngLat, index);
                     }}
-                    longitude={list[index][1][0]}
-                    latitude={list[index][1][1]}
+                    longitude={ list[index][1][0]}
+                    latitude={ list[index][1][1]}
                   >
                     <div
                       className="move-indicator"
@@ -307,21 +307,22 @@ export default class App extends Component {
                           ? zoom * 10
                           : zoom * 11
                       }
-                      style={
-                           {
-                              pointerEvents: this.state.canDelete || this.state.canMove ? 'auto' : 'none',
-                              opacity: this.state.canDelete ? 0.5 : 1,
-                              backgroundColor: this.state.canDelete ? "red" : null,
-                              borderRadius: this.state.canDelete ? "5px" : null,
-                              transform: `translate(${-size /
-                                1.8}px,${-size}px)`
-                            }
-                      }
+                      style={{
+                        pointerEvents:
+                          this.state.canDelete || this.state.canMove
+                            ? "auto"
+                            : "none",
+                        opacity: this.state.canDelete ? 0.5 : 1,
+                        backgroundColor: this.state.canDelete ? "red" : null,
+                        borderRadius: this.state.canDelete ? "5px" : null,
+                        transform: `translate(${-size / 1.8}px,${-size}px)`
+                      }}
                       alt={`${point._id}`}
                     />
                   </Marker>
                 );
               })}
+
               <div className="control-container nes-container is-rounded">
                 <div className="center-btn" onClick={this._goToViewport} />
                 <div
@@ -333,7 +334,11 @@ export default class App extends Component {
                   }
                   onClick={this._handleCanMove}
                 />
-                <div className="delete-btn" onClick={this._handleCanDelete} />
+                <Delete
+                  fill={this.state.canDelete ? "#fff" : "#000"}
+                  className="delete-btn"
+                  onClick={this._handleCanDelete}
+                />
                 <div className="reload-btn" onClick={this._reload} />
               </div>
             </ReactMapGL>
